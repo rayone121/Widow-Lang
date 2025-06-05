@@ -37,8 +37,8 @@
 Widow is currently in active development. To use it, you'll need to build from source:
 
 ```bash
-git clone https://github.com/your-username/widow # Replace with your actual repo URL
-cd widow
+git clone https://github.com/rayone121/Widow-Lang # Replace with your actual repo URL
+cd Widow-Lang
 cargo build --release 
 # The main binary will be in target/release/widow
 # (Note: direct .wd file execution is not yet supported)
