@@ -259,7 +259,7 @@ Special thanks to:
 
 <div align="center">
 
-**Built with ❤️ and ☕ by the rayone121**
+**Built with ❤️ and ☕ by rayone121**
 
 [⭐ Star us on GitHub](https://github.com/rayone121/Widow-Lang) 
 
