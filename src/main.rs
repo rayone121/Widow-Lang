@@ -1,8 +1,19 @@
 use widow_lang::{VM, InstructionBuilder, encode, vm::GCConfig};
 use widow_lang::compiler::instruction_builder::registers::*;
+use widow_lang::lexer::{WidowLexer, Token, LocatedToken};
+use std::env;
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+    
+    if args.len() > 1 && args[1] == "lexer" {
+        println!("=== Widow Language Lexer Demo ===\n");
+        demo_lexer();
+        return;
+    }
+
     println!("=== Widow Language VM Demo ===\n");
+    println!("Run with 'cargo run lexer' to see lexer demo\n");
 
     // Create a new VM with 16MB memory
     let mut vm = VM::new_default();
@@ -241,6 +252,155 @@ fn demo_garbage_collection(vm: &mut VM) {
     println!("  Total objects collected: {}", final_stats.objects_collected);
     println!("  Total bytes collected: {}", final_stats.bytes_collected);
     println!("  Objects remaining: {}", gc_vm.get_gc().object_count());
+}
+
+fn demo_lexer() {
+    let source_code = r#"
+        // Function definition with type annotations
+        func fibonacci(n:i32) -> i32 {
+            if n <= 1 {
+                ret n
+            } else {
+                ret fibonacci(n - 1) + fibonacci(n - 2)
+            }
+        }
+
+        // Variables and constants
+        const MAX_SIZE = 100
+        name = "Alice"
+        age:i32 = 30
+        
+        // String interpolation
+        greeting = `Hello, ${name}! You are ${age} years old.`
+        
+        // Collections
+        numbers = [1, 2, 3, 4, 5]
+        scores = {"Alice": 95, "Bob": 87}
+        
+        // For loop with range
+        for i in 1..=10 {
+            if i % 2 == 0 {
+                print(`${i} is even`)
+            }
+        }
+        
+        // Pattern matching
+        result = match value {
+            1: "one"
+            2, 3: "two or three"
+            n if n > 10: "big number"
+            _: "something else"
+        }
+        
+        // TODO: Add more examples
+        /* This is a multi-line
+           block comment */
+        /** Documentation comment **/
+    "#;
+
+    println!("Source code:");
+    println!("{}\n", source_code);
+
+    // Create lexer and tokenize
+    let mut lexer = WidowLexer::new(source_code);
+    let mut token_count = 0;
+    let mut error_count = 0;
+
+    println!("=== Token Stream ===");
+    println!("{:<5} {:<15} {:<25} {:<10} {}", 
+             "Line", "Column", "Token", "Span", "Text");
+    println!("{:-<80}", "");
+
+    while let Some(token_result) = lexer.next_token() {
+        match token_result {
+            Ok(located_token) => {
+                token_count += 1;
+                let LocatedToken { token, span, start_pos, .. } = located_token;
+                let text = &source_code[span.clone()];
+                
+                // Skip newlines for cleaner output
+                if matches!(token, Token::Newline) {
+                    continue;
+                }
+                
+                println!("{:<5} {:<15} {:<25} {:<10} {}", 
+                         start_pos.line,
+                         start_pos.column,
+                         format!("{:?}", token),
+                         format!("{}..{}", span.start, span.end),
+                         escape_whitespace(text));
+            }
+            Err(error_token) => {
+                error_count += 1;
+                let text = &source_code[error_token.span.clone()];
+                println!("ERROR at {}:{} - Invalid token: '{}'", 
+                         error_token.start_pos.line,
+                         error_token.start_pos.column,
+                         escape_whitespace(text));
+            }
+        }
+    }
+
+    println!("\n=== Summary ===");
+    println!("Total tokens: {}", token_count);
+    println!("Errors: {}", error_count);
+
+    // Demonstrate token classification
+    println!("\n=== Token Classification Examples ===");
+    let examples = vec![
+        ("func", "keyword"),
+        ("fibonacci", "identifier"), 
+        ("42", "integer literal"),
+        ("3.14", "float literal"),
+        ("\"hello\"", "string literal"),
+        ("+", "operator"),
+        ("==", "comparison operator"),
+        ("// comment", "line comment"),
+        ("// TODO: something", "line comment with TODO"),
+    ];
+
+    for (text, description) in examples {
+        let mut example_lexer = WidowLexer::new(text);
+        if let Some(Ok(located_token)) = example_lexer.next_token() {
+            println!("{:<15} -> {:<25} ({})", 
+                     text, 
+                     format!("{:?}", located_token.token),
+                     description);
+                     
+            // Show token properties
+            let token = &located_token.token;
+            let mut properties = Vec::new();
+            
+            if token.is_keyword() {
+                properties.push("keyword");
+            }
+            if token.is_literal() {
+                properties.push("literal");
+            }
+            if token.is_operator() {
+                properties.push("operator");
+            }
+            if token.is_comment() {
+                properties.push("comment");
+            }
+            
+            if !properties.is_empty() {
+                println!("                Properties: {}", properties.join(", "));
+            }
+        }
+    }
+}
+
+fn escape_whitespace(s: &str) -> String {
+    s.chars()
+        .map(|c| match c {
+            '\n' => "\\n".to_string(),
+            '\r' => "\\r".to_string(),
+            '\t' => "\\t".to_string(),
+            c if c.is_control() => format!("\\u{{{:04x}}}", c as u32),
+            c => c.to_string(),
+        })
+        .collect()
 }
 
 fn print_registers(vm: &VM, registers: &[u8]) {

@@ -21,12 +21,12 @@
 |---------|--------|-------------|-------------------------|
 | ⚡ **Register VM** | ✅ Implemented | Fast bytecode execution | Optimized for performance |
 | 🔄 **Garbage Collection** | ✅ Implemented | Automatic memory management (tricolor mark-and-sweep, generational support) | No manual memory handling |
-| 🔤 **High-Level Syntax** | 🚧 In Progress | Expressive and modern language features | `let name = "Widow"` |
+| 🔤 **High-Level Syntax** | 🚧 In Progress | Expressive and modern language features | `name = "Widow"` |
 | 🎯 **Type Safety** | 🎯 Goal | Optional static typing with inference | `x:i32 = 42` or `x = 42` |
 | 📦 **Bytecode** | ✅ Implemented | Well-defined instruction set for the VM | See VM Demos |
 | 🧩 **Language Frontend** | 🚧 In Progress | Lexer, Parser, AST, and Compiler for `.wd` source files | `.wd` files → Bytecode |
 | 🧵 **Async/Await** | 🎯 Goal | Built-in concurrency support | `result = await fetch_data(url)` |
-| 🔍 **Pattern Matching** | 🎯 Goal | Powerful destructuring | `match point { (x, y) => ... }` |
+| 🔍 **Pattern Matching** | 🎯 Goal | Powerful destructuring | `match point { (x, y): "point" }` |
 
 ---
 
@@ -88,21 +88,21 @@ name = "Alice"
 age = 30
 message = `Hello, ${name}! You are ${age} years old.`
 
-// Multi-line with formatting
-report = f`
-    Name: ${name:>15}
-    Age:  ${age:>15}
-    Status: ${"Active":>12}
+// Multi-line strings
+report = `
+    Name: ${name}
+    Age:  ${age}
+    Status: Active
 `
 ```
 
 ### 🎯 Smart Pattern Matching
 ```widow
 result = match user_input {
-    "quit", "exit", "q" => "Goodbye! 👋"
-    n if is_number(n) && n > 100 => "Big number! 📈"
-    email if email.contains("@") => `Email: ${email} 📧`
-    _ => "I don't understand 🤔"
+    "quit", "exit", "q": "Goodbye! 👋"
+    n if n > 100: "Big number! 📈"
+    email if email.contains("@"): `Email: ${email} 📧`
+    _: "I don't understand 🤔"
 }
 ```
 
@@ -123,18 +123,20 @@ user_data = await fetch_user_data(123)
 ```
 
 ### 🔧 Flexible Error Handling
-(Showcasing one or two planned styles, e.g., Result Types)
 ```widow
-func safe_divide(a, b) -> Result<f64, String> {
+func safe_divide(a, b) {
     if b == 0 {
-        ret Err("Division by zero! ⚠️")
+        ret nil, "Division by zero! ⚠️"
     }
-    ret Ok(a / b)
+    ret a / b, nil
 }
 
-result = safe_divide(10, 2)
-    .map(|x| x * 2)
-    .unwrap_or(0)
+result, err = safe_divide(10, 2)
+if err != nil {
+    print("Error: " + err)
+} else {
+    print("Result: " + result)
+}
 ```
 
 ---
@@ -150,35 +152,37 @@ trait Display {
 }
 
 struct Point<T> {
-    x: T
-    y: T
+    x:T
+    y:T
 }
 
-impl<T> Display for Point<T> where T: Display {
+impl Display for Point<T> {
     func to_string(self) -> String {
         ret `Point(${self.x}, ${self.y})`
     }
 }
 ```
 
-### 🔄 Powerful Destructuring
+### 🔄 Basic Destructuring
 ```widow
-// Object destructuring with defaults
-{name, age, city = "Unknown"} = user
+// Simple object destructuring
+{name, age} = user
 
-// Array destructuring with rest
-[first, second, ...rest] = items
+// Simple array destructuring
+[first, second] = items
+[first, _, third] = items  // Ignore values with underscore
 ```
 
 ### 🌊 Functional Programming
 ```widow
-// Pipe operations for clean data flow
+// Lambda functions and higher-order functions
+square = |x| x * x
+add = |a, b| a + b
+
 processed_data = raw_input
-    |> trim
-    |> split(",")
-    |> map(parse_int)
-    |> filter(|x| x > 0)
-    |> reduce(|acc, x| acc + x, 0)
+    .split(",")
+    .map(|x| parse_int(x))
+    .filter(|x| x > 0)
 ```
 
 ---
