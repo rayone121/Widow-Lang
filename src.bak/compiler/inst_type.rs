@@ -1,5 +1,5 @@
-use crate::vm::opcode::Opcode;
-use crate::vm::types::{FunctionCode, Register, ShiftAmount};
+use crate::compiler::opcode::Opcode;
+use crate::compiler::types::{FunctionCode, Register, ShiftAmount};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum InstructionType {
@@ -20,5 +20,8 @@ pub enum InstructionType {
     JType {
         opcode: Opcode,
         target: u16,
+    },
+    NType {
+        opcode: Opcode,
     },
 }

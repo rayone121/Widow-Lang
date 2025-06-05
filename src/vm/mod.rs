@@ -1,5 +1,9 @@
-//src/vm/mod.rs
-pub mod inst_type;
-pub mod instruction;
-pub mod opcode;
-pub mod types;
+pub mod vm;
+pub mod memory;
+pub mod error;
+pub mod registers;
+pub mod gc;
+
+pub use vm::VM;
+pub use error::VMError;
+pub use gc::{GarbageCollector, GCConfig, GCStats};
